@@ -1,12 +1,24 @@
-import React,{useState, useEffect, useCallback} from 'react';
+import React,{useState, useReducer, useEffect, useCallback} from 'react';
 import IngredientList from './IngredientList';
 import IngredientForm from './IngredientForm';
 import Search from './Search';
 import ErrorModel from '../UI/ErrorModal';
 
-const Ingredients = () => {
 
-  const [userIngredients, setUserIngredients] = useState([]);
+const ingredientReducer = (currentIngredient, action) => {
+  switch(action.type){
+    case 'SET' :
+      return action.ingredients;
+    case 'ADD' :
+      return [...currentIngredient,action.ingredient];
+    default :
+      throw new Error('Should not get there');
+  }
+}
+
+const Ingredients = () => {
+  const [userIngredients, dispatch] = useReducer(ingredientReducer,[]);
+  //const [userIngredients, setUserIngredients] = useState([]);
   const [error, setError] = useState();
 
   useEffect(()=>{
@@ -20,8 +32,9 @@ const Ingredients = () => {
           title: responseData[key].ingredient.title,
           amount: responseData[key].ingredient.amount
         })
-        setUserIngredients(loadedIngredients);
-        console.log(loadedIngredients);
+        //setUserIngredients(loadedIngredients);
+        // console.log(loadedIngredients);
+        dispatch({type:'SET',ingredients:loadedIngredients});
       }
     }).catch(error => {
       setError('Something went wrong !!');
@@ -29,7 +42,8 @@ const Ingredients = () => {
   },[]);
 
   const filteredIngredientsHandler= useCallback((filterIngredients) => {
-    setUserIngredients(filterIngredients);
+    //setUserIngredients(filterIngredients);
+    dispatch({type : 'SET', ingredients : filterIngredients})
   },[]);
 
   
@@ -42,8 +56,9 @@ const Ingredients = () => {
     }).then(response => {
       return response.json();
     }).then(responseData => {
-      setUserIngredients(prevIngredients => [...prevIngredients,
-      { id: responseData.name, ...ingredient }])
+      // setUserIngredients(prevIngredients => [...prevIngredients,
+      // { id: responseData.name, ...ingredient }])
+      dispatch({type: 'ADD',ingredient : {id : responseData.name, ...ingredient}})
     }).catch(error => {
       setError('Something went wrong !!');
     });
